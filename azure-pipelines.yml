@@ -1,0 +1,90 @@
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - terraform/network/core/*
+
+
+# -----------------------------------------------------------------------------------
+#  tst
+# -----------------------------------------------------------------------------------
+
+
+stages:
+- stage: 'plan_tst'
+  displayName: 'Plan tst'
+  jobs:
+  - job:   # instead of job keyword, use deployment keyword, see: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/deployment-jobs?view=azure-devops
+    displayName: 'Plan tst'
+    pool:
+      vmImage: windows-latest
+    steps:
+    - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+      clean: true
+
+    - task: TerraformInstaller@0
+      inputs:
+        terraformVersion: '0.12.3'
+
+    - task: TerraformTaskV1@0
+      displayName: 'Terraform: init'
+      inputs:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/demo3'
+        command: 'init'
+        commandOptions: '-input=false'
+        backendServiceArm: demo
+        backendAzureRmResourceGroupName: 'state'    
+        backendAzureRmStorageAccountName: 'demotfstatednb '   # this storage accounts is prefixed with 'stcfstate...' 
+        backendAzureRmContainerName: 'state'
+        backendAzureRmKey: tst.tfstate
+
+    - task: TerraformTaskV1@0
+      displayName: 'Terraform: plan'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        commandOptions: '-var=env=tst'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/demo3'
+        environmentServiceNameAzureRM: 'demo'
+
+- stage: 'apply_tst'
+  displayName: 'Apply tst'
+  jobs:
+  - deployment:  
+    displayName: 'Apply test'
+    pool:
+      vmImage: windows-latest
+    environment: 'example'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+            clean: true
+          
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: '0.12.3'
+
+          - task: TerraformTaskV1@0
+            displayName: 'Terraform: init'
+            inputs:
+              workingDirectory: '$(System.DefaultWorkingDirectory)/demo3'
+              command: 'init'
+              commandOptions: '-input=false'
+              backendServiceArm: demo
+              backendAzureRmResourceGroupName: 'state'
+              backendAzureRmStorageAccountName: 'demotfstatednb'
+              backendAzureRmContainerName: 'state'
+              backendAzureRmKey: tst.tfstate
+              
+          - task: TerraformTaskV1@0
+            displayName: 'Terraform: apply'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '-auto-approve -var=env=tst'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/demo3'
+              environmentServiceNameAzureRM: 'demo'
