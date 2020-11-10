@@ -29,7 +29,7 @@ stages:
         commandOptions: '-input=false'
         backendServiceArm: demo
         backendAzureRmResourceGroupName: 'state'    
-        backendAzureRmStorageAccountName: 'demotfstatednb '   # this storage accounts is prefixed with 'stcfstate...' 
+        backendAzureRmStorageAccountName: 'example '   # this storage accounts is prefixed with 'stcfstate...' 
         backendAzureRmContainerName: 'state'
         backendAzureRmKey: tst.tfstate
 
@@ -69,7 +69,7 @@ stages:
               commandOptions: '-input=false'
               backendServiceArm: demo
               backendAzureRmResourceGroupName: 'state'
-              backendAzureRmStorageAccountName: 'demotfstatednb'
+              backendAzureRmStorageAccountName: 'example'
               backendAzureRmContainerName: 'state'
               backendAzureRmKey: tst.tfstate
               
